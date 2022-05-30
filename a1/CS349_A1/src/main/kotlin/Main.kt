@@ -18,10 +18,13 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
+import javafx.scene.text.Text
+import javafx.scene.text.TextFlow
 import javafx.stage.Stage
 import javafx.stage.StageStyle
 import java.io.*
 import java.nio.file.DirectoryNotEmptyException
+import java.util.*
 import kotlin.io.path.moveTo
 
 class Main : Application() {
@@ -30,18 +33,18 @@ class Main : Application() {
     fun populate(root: File) : ObservableList<File> {
         val contents = FXCollections.observableArrayList<File>()
         // populate the side menu with contents in directory
-        for (content in root.listFiles()) {
+        for (content in root.listFiles()!!) {
             val file = content.relativeTo(root)
-            if (!hidden || !file.getName().startsWith(".")){ contents.add(file) }
+            if (!hidden || !file.name.startsWith(".")){ contents.add(file) }
         }
         return contents
     }
     fun fileViewRefresh(root: File, fileView: ListView<File>){
-        fileView.getItems().clear()
-        fileView.getItems().addAll(populate(root))
+        fileView.items.clear()
+        fileView.items.addAll(populate(root))
     }
     fun renameDialogue(parent: File, fileView: ListView<File>){
-        val selected = fileView.getSelectionModel().getSelectedItem()
+        val selected = fileView.selectionModel.selectedItem
         selected ?.let {
             val promptWindow = Stage()
             promptWindow.initStyle(StageStyle.UTILITY)
@@ -52,12 +55,36 @@ class Main : Application() {
             val rename = TextField()
             textBox.padding = Insets(5.0,5.0,10.0,5.0)
             val submitButton = Button("Submit")
-            rename.setPromptText("Please enter the new name of the file")
-            textBox.getChildren().addAll(prompt, rename, submitButton)
+            rename.promptText = "Please enter the new name of the file"
+            textBox.children.addAll(prompt, rename, submitButton)
+            val renameKey: EventHandler<KeyEvent> = EventHandler {
+                if (it.code == KeyCode.ENTER) {
+                    val input = rename.text
+                    try {
+                        parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input + "." + selected.extension).toPath())
+                        fileViewRefresh(parent, fileView)
+                        promptWindow.close()
+                    } catch (e: FileAlreadyExistsException) {
+                        val alert = Alert(Alert.AlertType.ERROR, "File name already exists.")
+                        alert.showAndWait()
+                    } catch (e: DirectoryNotEmptyException) {
+                        val alert = Alert(Alert.AlertType.ERROR, "Directory is not empty")
+                        alert.showAndWait()
+                    } catch (e: Exception) {
+                        val alert = Alert(
+                            Alert.AlertType.ERROR, "Cannot rename $selected to ${input + "." + selected.extension}."
+                        )
+                        alert.showAndWait()
+                    }
+                }
+            }
+            promptWindow.addEventFilter(KeyEvent.KEY_PRESSED,renameKey)
             submitButton.setOnAction {
-                val input = rename.getText()
+                val input = rename.text
                 try {
+                    println("${parent.resolve(selected).resolveSibling(input+"." + selected.extension).toPath()}")
                     parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input+"." + selected.extension).toPath())
+
                     fileViewRefresh(parent, fileView)
                     promptWindow.close()
                 }
@@ -88,34 +115,55 @@ class Main : Application() {
     }
     fun moveDialogue(parent: File, fileView: ListView<File>){
 
-        val selected = fileView.getSelectionModel().getSelectedItem()
+        val selected = fileView.selectionModel.selectedItem
         selected?.let {
             val promptWindow = Stage()
             promptWindow.initStyle(StageStyle.UTILITY)
             promptWindow.title = "Move File"
             val textBox = VBox()
             val promptScene = Scene(textBox)
-            val prompt = Label("Rename $selected as: ")
-            val rename = TextField()
+            val prompt = Label("Move $selected to: ")
+            val move = TextField()
             textBox.padding = Insets(5.0, 5.0, 10.0, 5.0)
             val submitButton = Button("Submit")
-            rename.setPromptText("Please enter the new name of the file")
-            textBox.getChildren().addAll(prompt, rename, submitButton)
+            move.promptText = "Please enter file path to new directory"
+            textBox.children.addAll(prompt, move, submitButton)
+            val moveKey: EventHandler<KeyEvent> = EventHandler {
+                // evaluate which key was pressed
+                if (it.code == KeyCode.ENTER) {
+                    val input = move.text
+                    try {
+                        parent.resolve(selected).toPath().moveTo(parent.resolve(input).resolve(selected).toPath().toAbsolutePath())
+                        fileViewRefresh(parent, fileView)
+                        promptWindow.close()
+                    } catch (e: FileAlreadyExistsException) {
+                        val alert = Alert(Alert.AlertType.ERROR, "File name already exists.")
+                        alert.showAndWait()
+                    } catch (e: DirectoryNotEmptyException) {
+                        val alert = Alert(Alert.AlertType.ERROR, "Directory is not empty")
+                        alert.showAndWait()
+                    } catch (e: Exception) {
+                        val alert = Alert(Alert.AlertType.ERROR, "Cannot move $selected to ${parent.resolve(input).toPath().toAbsolutePath()}.")
+                        alert.showAndWait()
+                    }
+                }
+            }
+            promptWindow.addEventFilter(KeyEvent.KEY_PRESSED,moveKey)
             submitButton.setOnAction {
-                val input = rename.getText()
+                val input = move.text
                 try {
-                    parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input + "." + selected.extension).toPath())
+                    parent.resolve(selected).toPath().moveTo(parent.resolve(input).resolve(selected).toPath().toAbsolutePath())
                     fileViewRefresh(parent, fileView)
                     promptWindow.close()
                 } catch (e: FileAlreadyExistsException) {
-                    val alert = Alert(Alert.AlertType.ERROR, "File name already exists.")
+                    val alert = Alert(Alert.AlertType.ERROR, "File already exists.")
                     alert.showAndWait()
                 } catch (e: DirectoryNotEmptyException) {
                     val alert = Alert(Alert.AlertType.ERROR, "Directory is not empty")
                     alert.showAndWait()
                 } catch (e: Exception) {
-                    val alert =
-                        Alert(Alert.AlertType.ERROR, "Cannot rename $selected to ${input + "." + selected.extension}.")
+                    println("$e")
+                    val alert = Alert(Alert.AlertType.ERROR, "Cannot move $selected to ${parent.resolve(input).toPath().toAbsolutePath()}.")
                     alert.showAndWait()
                 }
             }
@@ -135,44 +183,56 @@ class Main : Application() {
         println("selected is $selected")
         if (parent.resolve(selected).isDirectory) {
             println("selected is $selected")
-            for (content in parent.resolve(selected).listFiles()) {
+            for (content in parent.resolve(selected).listFiles()!!) {
                 deleteRecurse(parent.resolve(selected), content)
             }
         }
         parent.resolve(selected).delete()
     }
     fun deleteDialogue(parent: File, fileView: ListView<File>){
-        val selected = fileView.getSelectionModel().getSelectedItem()
+        val selected = fileView.selectionModel.selectedItem
         selected ?.let {
             val prompt = Alert(Alert.AlertType.CONFIRMATION,"Are you sure you want to delete $selected?")
             prompt.headerText = "Delete"
             prompt.title = "Delete"
             val result = prompt.showAndWait()
-            if (result.isPresent() && result.get() == ButtonType.OK){
+            if (result.isPresent && result.get() == ButtonType.OK){
                 deleteRecurse(parent, selected)
                 fileViewRefresh(parent, fileView)
             }
         }
     }
     fun preview(parent: File, file: File, label: Label, center: StackPane) {
-        var newFilePath = parent.resolve(file)
+        val newFilePath = parent.resolve(file)
         label.text = "$newFilePath"
-        var extension = file.extension
-        when(extension) {
+        when(file.extension) {
             "png", "jpg", "bmp" -> {
                 val imageStream = FileInputStream("$newFilePath")
                 val image = ImageView(Image(imageStream))
-                image.setPreserveRatio(true)
+                imageStream.close()
+                image.isPreserveRatio = true
                 val imageView = Group(image)
-                center.getChildren().setAll(imageView)
-                image.setFitWidth(center.width)
+                center.children.setAll(imageView)
+                image.fitWidthProperty().bind(center.widthProperty())
+                image.fitHeightProperty().bind(center.heightProperty())
+
             }
             "txt", "md" -> {
-                val reader = WebView
-                center.getChildren().setAll(textReader)
+                val scanner = Scanner(newFilePath)
+                var string = ""
+                while(scanner.hasNext()) {
+                    string += scanner.nextLine()
+                    string += "\n"
+                }
+                scanner.close()
+                val textNode = Text(string)
+                val textFlow = TextFlow(textNode)
+                val scrollPane = ScrollPane(textFlow)
+                scrollPane.isFitToWidth = true
+                center.children.setAll(scrollPane)
             }
             else -> {
-
+                center.children.clear()
             }
         }
     }
@@ -233,11 +293,10 @@ class Main : Application() {
         // ************* HANDLE EVENTS *************
         // fileView events
         val fileClick: EventHandler<MouseEvent> = EventHandler { event ->
-            val selected = fileView.getSelectionModel().getSelectedItem()
+            val selected = fileView.selectionModel.selectedItem
             selected ?. let{
                 // edit the label to reflect selected file
                 preview(parent, selected, label, center)
-
                 // if user double-clicked on directory, repopulate the listView with the new file list
                 if ((parent.resolve(selected).isDirectory) && (event.clickCount == 2)) {
                     parent = parent.resolve(selected)
@@ -246,9 +305,9 @@ class Main : Application() {
             }
         }
         val fileKey: EventHandler<KeyEvent> = EventHandler {
-            val selected = fileView.getSelectionModel().getSelectedItem()
+            val selected = fileView.selectionModel.selectedItem
             // evaluate which key was pressed
-            when (it.getCode()) {
+            when (it.code) {
                 KeyCode.ENTER -> {
                     selected ?.let {
                         if (parent.resolve(selected).isDirectory) {
@@ -258,14 +317,14 @@ class Main : Application() {
                     }
                 }
                 KeyCode.BACK_SPACE, KeyCode.DELETE -> {
-                    if (!parent.equals(dir)) {
+                    if (parent != dir) {
                         parent = parent.parentFile
                         fileViewRefresh(parent, fileView)
                     }
                 }
                 KeyCode.UP, KeyCode.DOWN -> {
-                    fileView.getSelectionModel().selectedItemProperty().addListener {
-                            obs: ObservableValue<out File>, oldFile, newFile ->
+                    fileView.selectionModel.selectedItemProperty().addListener {
+                            _: ObservableValue<out File>, _, newFile ->
                         newFile  ?.let {
                             preview(parent, newFile, label, center)
                         }
@@ -286,13 +345,13 @@ class Main : Application() {
             fileViewRefresh(parent, fileView)
         }
         prevButton.setOnAction {
-            if (!parent.equals(dir)) {
+            if (parent != dir) {
                 parent = parent.parentFile
                 fileViewRefresh(parent, fileView)
             }
         }
         nextButton.setOnAction {
-            val selected = fileView.getSelectionModel().getSelectedItem()
+            val selected = fileView.selectionModel.selectedItem
             selected ?.let {
                 if (parent.resolve(selected).isDirectory) {
                     parent = parent.resolve(selected)
@@ -302,8 +361,7 @@ class Main : Application() {
         }
         delButton.setOnAction { deleteDialogue(parent, fileView) }
         renameButton.setOnAction { renameDialogue(parent, fileView) }
-        moveButton.setOnAction {
-        }
+        moveButton.setOnAction { moveDialogue(parent, fileView) }
 
         // fileMenu events
         fileNew.setOnAction {  }
@@ -332,7 +390,7 @@ class Main : Application() {
         // setup and show the window
         stage.title = "File Browser"
         stage.isResizable = true
-        stage.getIcons().add(Image("folder.png"))
+        stage.icons.add(Image("folder.svg"))
         stage.width = 640.0
        //stage.minWidth = 512.0
        // stage.maxWidth = 768.0
