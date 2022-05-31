@@ -1,5 +1,6 @@
 import javafx.application.Application
 import javafx.application.Platform
+import javafx.beans.binding.Bindings
 import javafx.beans.value.ObservableValue
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
@@ -42,6 +43,14 @@ class Main : Application() {
     fun fileViewRefresh(root: File, fileView: ListView<File>){
         fileView.items.clear()
         fileView.items.addAll(populate(root))
+        for (item in fileView.items)  {
+            if (item.isDirectory) {
+
+            }
+            else if (item.extension == "png" || item.extension == "jpg" || item.extension == "bmp") {
+
+            }
+        }
     }
     fun renameDialogue(parent: File, fileView: ListView<File>){
         val selected = fileView.selectionModel.selectedItem
@@ -82,8 +91,7 @@ class Main : Application() {
             submitButton.setOnAction {
                 val input = rename.text
                 try {
-                    println("${parent.resolve(selected).resolveSibling(input+"." + selected.extension).toPath()}")
-                    parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input+"." + selected.extension).toPath())
+                   parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input+"." + selected.extension).toPath())
 
                     fileViewRefresh(parent, fileView)
                     promptWindow.close()
@@ -162,7 +170,6 @@ class Main : Application() {
                     val alert = Alert(Alert.AlertType.ERROR, "Directory is not empty")
                     alert.showAndWait()
                 } catch (e: Exception) {
-                    println("$e")
                     val alert = Alert(Alert.AlertType.ERROR, "Cannot move $selected to ${parent.resolve(input).toPath().toAbsolutePath()}.")
                     alert.showAndWait()
                 }
@@ -180,9 +187,7 @@ class Main : Application() {
         }
     }
     fun deleteRecurse(parent: File, selected: File){
-        println("selected is $selected")
         if (parent.resolve(selected).isDirectory) {
-            println("selected is $selected")
             for (content in parent.resolve(selected).listFiles()!!) {
                 deleteRecurse(parent.resolve(selected), content)
             }
@@ -250,7 +255,14 @@ class Main : Application() {
         val delButton = Button("Delete")
         val renameButton = Button("Rename")
         val moveButton = Button("Move")
-        toolBar.items.addAll(homeButton, prevButton, nextButton, delButton, renameButton, moveButton)
+        homeButton.graphic = ImageView("home.png")
+        prevButton.graphic = ImageView("previous.png")
+        nextButton.graphic = ImageView("next.png")
+        delButton.graphic = ImageView("delete.png")
+        renameButton.graphic = ImageView("rename.png")
+        moveButton.graphic = ImageView("move.png")
+
+        toolBar.items.addAll(homeButton, prevButton, nextButton, moveButton, delButton, renameButton)
 
         val menuBar = MenuBar()
         val fileMenu = Menu("File")
@@ -258,16 +270,28 @@ class Main : Application() {
         val actionsMenu = Menu("Actions")
         val optionsMenu = Menu("Options")
 
-        val fileNew = MenuItem("New")
-        val fileOpen = MenuItem("Open")
-        val fileClose = MenuItem("Close")
+//        val fileNew = MenuItem("New")
+//        val fileOpen = MenuItem("Open")
+//        val fileClose = MenuItem("Close")
         val fileQuit = MenuItem("Quit")
-        fileMenu.items.addAll(fileNew, fileOpen, fileClose, fileQuit)
+        fileQuit.graphic = ImageView("quit.png")
+        fileMenu.items.addAll(fileQuit)
 
-        val actionRename = MenuItem("Rename")
+        val viewHome = MenuItem("Home")
+        val viewPrev = MenuItem("Previous")
+        val viewNext = MenuItem("Next")
+        viewHome.graphic = ImageView("home_small.png")
+        viewPrev.graphic = ImageView("previous_small.png")
+        viewNext.graphic = ImageView("next_small.png")
+        viewMenu.items.addAll(viewHome, viewPrev, viewNext)
+
         val actionMove = MenuItem("Move")
         val actionDel = MenuItem("Delete")
-        actionsMenu.items.addAll(actionRename, actionMove, actionDel)
+        val actionRename = MenuItem("Rename")
+        actionRename.graphic = ImageView("rename_small.png")
+        actionMove.graphic = ImageView("move_small.png")
+        actionDel.graphic = ImageView("delete_small.png")
+        actionsMenu.items.addAll(actionMove, actionDel, actionRename)
 
         val optionShow = RadioMenuItem("Show Hidden Files")
         optionsMenu.items.addAll(optionShow)
@@ -330,9 +354,6 @@ class Main : Application() {
                         }
                     }
                 }
-                else -> {
-                    println("Other key was pressed")
-                }
             }
         }
 
@@ -364,8 +385,6 @@ class Main : Application() {
         moveButton.setOnAction { moveDialogue(parent, fileView) }
 
         // fileMenu events
-        fileNew.setOnAction {  }
-        fileOpen.setOnAction {  }
         fileQuit.setOnAction { Platform.exit() }
 
         // actionsMenu events
@@ -390,7 +409,7 @@ class Main : Application() {
         // setup and show the window
         stage.title = "File Browser"
         stage.isResizable = true
-        stage.icons.add(Image("folder.svg"))
+        stage.icons.add(Image("folder.png"))
         stage.width = 640.0
        //stage.minWidth = 512.0
        // stage.maxWidth = 768.0

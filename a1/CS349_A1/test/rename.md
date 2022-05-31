@@ -1,3 +1,0 @@
-**WEIRD** how i can't seem to rename newly created files 
-
-Too weird...
