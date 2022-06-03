@@ -70,20 +70,24 @@ class Main : Application() {
                 if (it.code == KeyCode.ENTER) {
                     val input = rename.text
                     try {
-                        parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input + "." + selected.extension).toPath())
+                        parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input+"." + selected.extension).toPath())
                         fileViewRefresh(parent, fileView)
                         promptWindow.close()
-                    } catch (e: FileAlreadyExistsException) {
-                        val alert = Alert(Alert.AlertType.ERROR, "File name already exists.")
-                        alert.showAndWait()
-                    } catch (e: DirectoryNotEmptyException) {
-                        val alert = Alert(Alert.AlertType.ERROR, "Directory is not empty")
-                        alert.showAndWait()
-                    } catch (e: Exception) {
-                        val alert = Alert(
-                            Alert.AlertType.ERROR, "Cannot rename $selected to ${input + "." + selected.extension}."
-                        )
-                        alert.showAndWait()
+                    }
+                    catch (e: FileAlreadyExistsException) {
+                        val alert = Alert(Alert.AlertType.ERROR,"File name already exists.")
+                        alert.show()
+                        promptWindow.close()
+                    }
+                    catch (e: DirectoryNotEmptyException) {
+                        val alert = Alert(Alert.AlertType.ERROR,"Directory is not empty")
+                        alert.show()
+                        promptWindow.close()
+                    }
+                    catch (e: Exception) {
+                        val alert = Alert(Alert.AlertType.ERROR,"Cannot rename $selected to ${input + "." + selected.extension}.")
+                        alert.show()
+                        promptWindow.close()
                     }
                 }
             }
@@ -92,21 +96,23 @@ class Main : Application() {
                 val input = rename.text
                 try {
                    parent.resolve(selected).toPath().moveTo(parent.resolve(selected).resolveSibling(input+"." + selected.extension).toPath())
-
                     fileViewRefresh(parent, fileView)
                     promptWindow.close()
                 }
                 catch (e: FileAlreadyExistsException) {
                     val alert = Alert(Alert.AlertType.ERROR,"File name already exists.")
-                    alert.showAndWait()
+                    alert.show()
+                    promptWindow.close()
                 }
                 catch (e: DirectoryNotEmptyException) {
                     val alert = Alert(Alert.AlertType.ERROR,"Directory is not empty")
-                    alert.showAndWait()
+                    alert.show()
+                    promptWindow.close()
                 }
                 catch (e: Exception) {
                     val alert = Alert(Alert.AlertType.ERROR,"Cannot rename $selected to ${input + "." + selected.extension}.")
-                    alert.showAndWait()
+                    alert.show()
+                    promptWindow.close()
                 }
             }
 
@@ -146,13 +152,16 @@ class Main : Application() {
                         promptWindow.close()
                     } catch (e: FileAlreadyExistsException) {
                         val alert = Alert(Alert.AlertType.ERROR, "File name already exists.")
-                        alert.showAndWait()
+                        alert.show()
+                        promptWindow.close()
                     } catch (e: DirectoryNotEmptyException) {
                         val alert = Alert(Alert.AlertType.ERROR, "Directory is not empty")
-                        alert.showAndWait()
+                        alert.show()
+                        promptWindow.close()
                     } catch (e: Exception) {
-                        val alert = Alert(Alert.AlertType.ERROR, "Cannot move $selected to ${parent.resolve(input).toPath().toAbsolutePath()}.")
-                        alert.showAndWait()
+                        val alert = Alert(Alert.AlertType.ERROR, "Cannot move $selected to $input.")
+                        alert.show()
+                        promptWindow.close()
                     }
                 }
             }
@@ -210,34 +219,50 @@ class Main : Application() {
     fun preview(parent: File, file: File, label: Label, center: StackPane) {
         val newFilePath = parent.resolve(file)
         label.text = "$newFilePath"
-        when(file.extension) {
-            "png", "jpg", "bmp" -> {
-                val imageStream = FileInputStream("$newFilePath")
-                val image = ImageView(Image(imageStream))
-                imageStream.close()
-                image.isPreserveRatio = true
-                val imageView = Group(image)
-                center.children.setAll(imageView)
-                image.fitWidthProperty().bind(center.widthProperty())
-                image.fitHeightProperty().bind(center.heightProperty())
+        if(!File("$newFilePath").canRead()){
+            val string="File cannot be read"
+            val textNode = Text(string)
+            val textFlow = TextFlow(textNode)
+            val scrollPane = ScrollPane(textFlow)
+            center.children.setAll(scrollPane)
+        }
+        else if(File("$newFilePath").isDirectory) {
+            center.children.clear()
+        }
+        else {
+            when (file.extension) {
+                "png", "jpg", "bmp" -> {
+                    val imageStream = FileInputStream("$newFilePath")
+                    val image = ImageView(Image(imageStream))
+                    imageStream.close()
+                    image.isPreserveRatio = true
+                    val imageView = Group(image)
+                    center.children.setAll(imageView)
+                    image.fitWidthProperty().bind(center.widthProperty())
+                    image.fitHeightProperty().bind(center.heightProperty())
 
-            }
-            "txt", "md" -> {
-                val scanner = Scanner(newFilePath)
-                var string = ""
-                while(scanner.hasNext()) {
-                    string += scanner.nextLine()
-                    string += "\n"
                 }
-                scanner.close()
-                val textNode = Text(string)
-                val textFlow = TextFlow(textNode)
-                val scrollPane = ScrollPane(textFlow)
-                scrollPane.isFitToWidth = true
-                center.children.setAll(scrollPane)
-            }
-            else -> {
-                center.children.clear()
+                "txt", "md" -> {
+                    val scanner = Scanner(newFilePath)
+                    var string = ""
+                    while (scanner.hasNext()) {
+                        string += scanner.nextLine()
+                        string += "\n"
+                    }
+                    scanner.close()
+                    val textNode = Text(string)
+                    val textFlow = TextFlow(textNode)
+                    val scrollPane = ScrollPane(textFlow)
+                    scrollPane.isFitToWidth = true
+                    center.children.setAll(scrollPane)
+                }
+                else -> {
+                    val string="Unsupported type"
+                    val textNode = Text(string)
+                    val textFlow = TextFlow(textNode)
+                    val scrollPane = ScrollPane(textFlow)
+                    center.children.setAll(scrollPane)
+                }
             }
         }
     }
@@ -386,6 +411,27 @@ class Main : Application() {
 
         // fileMenu events
         fileQuit.setOnAction { Platform.exit() }
+
+        // viewMenu events
+        viewHome.setOnAction {
+            parent = dir
+            fileViewRefresh(parent, fileView)
+        }
+        viewPrev.setOnAction {
+            if (parent != dir) {
+                parent = parent.parentFile
+                fileViewRefresh(parent, fileView)
+            }
+        }
+        viewNext.setOnAction {
+            val selected = fileView.selectionModel.selectedItem
+            selected ?.let {
+                if (parent.resolve(selected).isDirectory) {
+                    parent = parent.resolve(selected)
+                    fileViewRefresh(parent, fileView)
+                }
+            }
+        }
 
         // actionsMenu events
         actionRename.setOnAction { renameDialogue(parent, fileView) }
