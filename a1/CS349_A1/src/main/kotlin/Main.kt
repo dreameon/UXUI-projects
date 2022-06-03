@@ -113,7 +113,7 @@ class Main : Application() {
             promptWindow.width = 250.0
             promptWindow.minWidth = 200.0
             promptWindow.maxWidth = 400.0
-
+            promptWindow.isResizable = false
             promptWindow.minHeight = 120.0
             promptWindow.maxHeight = 120.0
 
@@ -181,7 +181,7 @@ class Main : Application() {
 
             promptWindow.minHeight = 120.0
             promptWindow.maxHeight = 120.0
-
+            promptWindow.isResizable = false
             promptWindow.scene = promptScene
             promptWindow.show()
         }
@@ -408,7 +408,7 @@ class Main : Application() {
 
         // setup and show the window
         stage.title = "File Browser"
-        stage.isResizable = true
+        stage.isResizable = false
         stage.icons.add(Image("folder.png"))
         stage.width = 640.0
        //stage.minWidth = 512.0
