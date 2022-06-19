@@ -6,6 +6,7 @@ e6law 20758964
 * All buttons have been implemented with a toggle-like view (only one item will be selected at a time) 
 * Buttons for the stroke style selection have a default set to them already (thinnest and without dashes)
 * If canvas was newly loaded/created/saved and no edits have been made to the drawing since then, user should not be prompted to save when attempting to create a new drawing, load a drawing, or quit.
+* Users can use shortcuts CTRL+C, CTRL+X, and CTRL+V to copy, cut, and paste selected shapes, respectively
 
 <u>3rd Party Graphics Used</u>:
 * <a target="_blank" href="https://icons8.com/icon/sAI7rrrH1R6b/drawing">Drawing</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>  

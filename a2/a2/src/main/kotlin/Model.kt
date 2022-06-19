@@ -22,7 +22,7 @@ class Model {
     // the model uses this method to notify all of the Views that the data has changed
     // the expectation is that the Views will refresh themselves to display new data when appropriate
     private fun notifyObservers() {
-        print(selectedShape)
+        println(selectedShape)
         for (view in views) {
             view.updateView()
         }

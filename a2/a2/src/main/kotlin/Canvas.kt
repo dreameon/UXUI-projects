@@ -523,6 +523,22 @@ internal class Canvas(
         // if we pressed a key while having an object selected, determine what to do with it
         addEventFilter(KeyEvent.KEY_PRESSED) { event ->
             if (tool == "Select") {
+                if (event.isControlDown) {
+                    when(event.code) {
+                        KeyCode.C -> {
+                            println("Control C")
+                            selectedShape?.let { model.copyShape(it) }
+                        }
+                        KeyCode.X -> {
+                            println("Control X")
+                            selectedShape?.let { model.cutShape(it) }
+                        }
+                        KeyCode.V -> {
+                            println("Control V")
+                            selectedShape?.let { model.pasteShape(it) }
+                        }
+                    }
+                }
                 when (event.code) {
                     KeyCode.DELETE -> {
                         selectedShape?.let { model.removeShape(it) }
