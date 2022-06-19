@@ -1,0 +1,25 @@
+.toggle-button:selected {
+
+    -fx-background-color: #d4d4d4;
+}
+.toggle-button:hover {
+    -fx-background-color: #d4d4d4;
+}
+.toggle-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent
+}
+
+#selected {
+    -fx-effect: dropshadow(gaussian, #f5849d, 20, 0.2, 0, 0);
+}
+
+#unselected {
+    -fx-effect: none
+}
+
+/*
+.color-picker > .color-picker-label > .picker-color > .picker-color-rect {
+    -fx-stroke: null;
+    -fx-fill : null;
+}*/
