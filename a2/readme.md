@@ -1,5 +1,7 @@
 Evelyn Law  
 e6law 20758964  
+Kotlin 17.0.2
+Windows 10 Education 19042.1706
 
 <u>Assignment Specifications</u>:
 * Canvas can grow up to a maximum size of 980 x 1840. If view is smaller than the canvas, scrollbars are added to navigate the drawing. 
