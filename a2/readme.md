@@ -1,8 +1,10 @@
 Evelyn Law  
 e6law 20758964  
+Kotlin 17.0.2  
+Windows 10 Education 19042.1706
 
 <u>Assignment Specifications</u>:
-* Canvas can grow up to a maximum size of 980 x 1840. If view is smaller than the canvas, scrollbars are added to navigate the drawing. 
+* Canvas can grow up to a maximum size of 1840 x 980. If view is smaller than the canvas, scrollbars are added to navigate the drawing. 
 * All buttons have been implemented with a toggle-like view (only one item will be selected at a time) 
 * Buttons for the stroke style selection have a default set to them already (thinnest and without dashes)
 * If canvas was newly loaded/created/saved and no edits have been made to the drawing since then, user should not be prompted to save when attempting to create a new drawing, load a drawing, or quit.
