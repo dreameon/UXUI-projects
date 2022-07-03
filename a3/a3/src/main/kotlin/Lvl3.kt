@@ -55,8 +55,7 @@ internal class Lvl3(
     private val alienBullets = mutableListOf<Node>()
     private var alienMinRef = Point2D(0.0, 0.0)
     private var alienMaxRef = Point2D(0.0, 0.0)
-    private var ENEMY_SPEED = 1.5
-    private val ENEMY_VERTICAL_SPEED = 30.0
+    private var ENEMY_SPEED = 1.2
     private var ENEMY_BULLET_SPEED = 4.0
     private val enemyHeight = 41.0
     private val enemyWidth = 60.0
@@ -173,6 +172,40 @@ internal class Lvl3(
                     alienMaxRef = Point2D(alienMaxRef.x + ENEMY_SPEED, alienMaxRef.y)
                     for (alien in alienGroup.children) {
                         (alien as ImageView).x += ENEMY_SPEED
+                        if (alien.boundsInParent.intersects(player.boundsInParent)) {
+                            model.loseLife()
+                            MediaPlayer(Media(classLoader.getResource("sounds/explosion.wav")?.toString())).play()
+
+                            // did we die
+                            if (lives == 0) {
+                                println("aliens have descended onto earth :(")
+                                model.setScene(SCENES.GAMEOVERSCENE)
+                                playerTimer.stop()
+                                playerBulletSpamTimer.stop()
+                                this.stop()
+                                break
+                            }
+                            // we did not
+                            else {
+                                // find a safe place to respawn
+                                var respawn = false
+                                while (!respawn) {
+                                    println("respawning")
+                                    player.x = Random.nextDouble(10.0, scene.width - playerWidth - 10.0 )
+                                    respawn = true
+                                    for (alien in alienGroup.children) {
+                                        if (alien.boundsInParent.intersects(player.boundsInParent)) {
+                                            respawn = false
+                                        }
+                                    }
+                                    for (bullet in alienBullets) {
+                                        if (bullet.boundsInParent.intersects(player.boundsInParent)) {
+                                            respawn = false
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 // if we reach the end of the bounds (with a padding of 10px), go down a level
@@ -192,7 +225,7 @@ internal class Lvl3(
                     }
                     // acc move the aliens down
                     for (alien in alienGroup.children) {
-                        (alien as ImageView).y += ENEMY_VERTICAL_SPEED
+                        (alien as ImageView).y += enemyHeight
                         // if we (the aliens) reach the bottom of the screen or if we touch the player, we lose a life
                         if ((((alien as ImageView).y > scene.height - enemyHeight - 10.0) or (alien.boundsInParent.intersects(player.boundsInParent)))) {
                             model.loseLife()
@@ -212,6 +245,7 @@ internal class Lvl3(
                                 // find a safe place to respawn
                                 var respawn = false
                                 while (!respawn) {
+                                    println("respawning")
                                     player.x = Random.nextDouble(10.0, scene.width - playerWidth - 10.0 )
                                     respawn = true
                                     for (alien in alienGroup.children) {
@@ -289,6 +323,8 @@ internal class Lvl3(
                                 }
                                 if (enemyBullet.y > scene.height) {
                                     alienBulletCount -= 1
+                                    alienBullets.remove(enemyBullet)
+                                    children.remove(enemyBullet)
                                     this.stop()
                                 }
                             }
@@ -304,7 +340,7 @@ internal class Lvl3(
         alienTimer.start()
 
         // create a bullet that fires from a random enemy after an arbitrary amount of time (within the next 5 seconds)
-        val enemyBulletPauseTimer = PauseTransition(Duration(Random.nextDouble(1000.0, 2000.0)))
+        val enemyBulletPauseTimer = PauseTransition(Duration(Random.nextDouble(1000.0, 3000.0)))
         // set timer finished event
         enemyBulletPauseTimer.onFinished = EventHandler {
             // don't fire a new bullet if there are already 3 (too many to dodge!!)
@@ -379,7 +415,7 @@ internal class Lvl3(
                 children.add(enemyBullet)
                 // if we still have lives, restart the timer and load more bullets >:3
                 if (lives > 0) {
-                    enemyBulletPauseTimer.duration = Duration(Random.nextDouble(1000.0, 2000.0))
+                    enemyBulletPauseTimer.duration = Duration(Random.nextDouble(1000.0, 3000.0))
                     enemyBulletPauseTimer.playFromStart()
                 }
             }

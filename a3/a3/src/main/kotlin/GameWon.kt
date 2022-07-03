@@ -33,13 +33,20 @@ internal class GameWon(
     }
     init{
         val scene = Scene(this, 1600.0, 1000.0)
+        background = Background(
+            BackgroundFill(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY)
+        )
         model.createScene(5,scene)
         spacer1.prefHeight = 100.0
         spacer2.prefHeight = 100.0
         congrats.font = titleFont
+        congrats.fill = Color.WHITE
         congratsMessage.font = titleFont
+        congratsMessage.fill = Color.WHITE
         score.font = gameFont
+        score.fill = Color.WHITE
         instructions.font = gameFont
+        instructions.fill = Color.WHITE
         instructions.textAlignment = TextAlignment.CENTER
         alignment = Pos.CENTER
         padding = Insets(50.0, 50.0, 0.0, 50.0)
