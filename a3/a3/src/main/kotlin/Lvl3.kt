@@ -225,9 +225,19 @@ internal class Lvl3(
                     }
                     // acc move the aliens down
                     for (alien in alienGroup.children) {
-                        (alien as ImageView).y += enemyHeight
+                        (alien as ImageView).y += enemyHeight + 20.0
                         // if we (the aliens) reach the bottom of the screen or if we touch the player, we lose a life
-                        if ((((alien as ImageView).y > scene.height - enemyHeight - 10.0) or (alien.boundsInParent.intersects(player.boundsInParent)))) {
+                        // if we (the aliens) reach the bottom of the screen, the player dies
+                        if ((alien as ImageView).y > scene.height - enemyHeight - 10.0) {
+                            println("aliens have descended onto earth :(")
+                            model.setScene(SCENES.GAMEOVERSCENE)
+                            playerTimer.stop()
+                            playerBulletSpamTimer.stop()
+                            this.stop()
+                            break
+                        }
+                        // if we touch the player, the player loses a life
+                        if (alien.boundsInParent.intersects(player.boundsInParent)) {
                             model.loseLife()
                             MediaPlayer(Media(classLoader.getResource("sounds/explosion.wav")?.toString())).play()
 
@@ -245,7 +255,6 @@ internal class Lvl3(
                                 // find a safe place to respawn
                                 var respawn = false
                                 while (!respawn) {
-                                    println("respawning")
                                     player.x = Random.nextDouble(10.0, scene.width - playerWidth - 10.0 )
                                     respawn = true
                                     for (alien in alienGroup.children) {
