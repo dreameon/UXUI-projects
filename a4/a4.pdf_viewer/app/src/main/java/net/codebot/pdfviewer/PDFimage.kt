@@ -18,7 +18,7 @@ class PDFimage  // constructor
 
     // image to display
     var bitmap: Bitmap? = null
-    var paint = Paint(Color.BLUE)
+    var paint = Paint()
 
     // capture touch events (down/move/up) to create a path
     // and use that to create a stroke that we can draw
@@ -60,6 +60,15 @@ class PDFimage  // constructor
         }
         // draw lines over it
         for (path in paths) {
+            with(paint){
+                isAntiAlias = true
+                strokeCap = Paint.Cap.ROUND
+                strokeJoin = Paint.Join.ROUND
+                strokeMiter = 10f
+                color = Color.BLUE
+                strokeWidth = 6.0f
+                style = Paint.Style.STROKE
+            }
             canvas.drawPath(path!!, paint)
         }
         super.onDraw(canvas)

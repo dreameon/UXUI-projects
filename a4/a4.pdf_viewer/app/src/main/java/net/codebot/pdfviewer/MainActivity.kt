@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         // Close the current page before opening another one.
-        currentPage?.close()
+        //currentPage?.close()
 
         // Use `openPage` to open a specific page in PDF.
         currentPage = pdfRenderer.openPage(index)
